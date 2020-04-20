@@ -3,13 +3,20 @@
 #include <vector>
 #include <algorithm>
 
-template<class T>
-struct HashFunc;
+template<class T> struct HashFunc;
+
+template<class T> struct SecondHashFunc;
 
 template<>
 struct HashFunc<std::string> {
     size_t operator()(const std::string &data);
 };
+
+template<> struct SecondHashFunc<std::string> {
+    size_t operator()(const std::string &data);
+};
+
+
 
 struct FindResult {
     bool result;
@@ -19,7 +26,7 @@ struct FindResult {
             : result(result), idx(idx) {}
 };
 
-template<class Key, class Hash = HashFunc<Key>>
+template<class Key, class Hash = HashFunc<Key>, class SecondHash = SecondHashFunc<Key>>
 class Set {
     enum CellType {
         empty, taken, deleted
@@ -44,6 +51,7 @@ private:
     size_t doubleHash(const Key &key, size_t idx);
 
     Hash hash;
+    SecondHash secondHash;
     size_t size;
     std::vector<Key> cells;
     std::vector<std::uint8_t> cellDescription;
@@ -66,11 +74,20 @@ size_t HashFunc<std::string>::operator()(const std::string &data) {
     return hash;
 }
 
-template<class Key, class Hash>
-Set<Key, Hash>::Set() : size(0) {};
+size_t SecondHashFunc<std::string>::operator()(const std::string &data) {
+    size_t hash = 0;
 
-template<class Key, class Hash>
-bool Set<Key, Hash>::insert(const Key &key) {
+    for (auto symbol : data) {
+        hash = (hash * 29 + symbol);
+    }
+    return hash;
+}
+
+template<class Key, class Hash, class SecondHash>
+Set<Key, Hash, SecondHash>::Set() : size(0) {};
+
+template<class Key, class Hash, class SecondHash>
+bool Set<Key, Hash, SecondHash>::insert(const Key &key) {
     if (cells.empty() || isLoaded()) {
         grow();
     }
@@ -90,8 +107,8 @@ bool Set<Key, Hash>::insert(const Key &key) {
     return true;
 }
 
-template<class Key, class Hash>
-bool Set<Key, Hash>::earse(const Key &key) {
+template<class Key, class Hash, class SecondHash>
+bool Set<Key, Hash, SecondHash>::earse(const Key &key) {
     FindResult result = find(key);
     if (!result.result) {
         return false;
@@ -101,13 +118,13 @@ bool Set<Key, Hash>::earse(const Key &key) {
     return true;
 }
 
-template<class Key, class Hash>
-bool Set<Key, Hash>::isContain(const Key &key) {
+template<class Key, class Hash, class SecondHash>
+bool Set<Key, Hash, SecondHash>::isContain(const Key &key) {
     return find(key).result;
 }
 
-template<class Key, class Hash>
-void Set<Key, Hash>::grow() {
+template<class Key, class Hash, class SecondHash>
+void Set<Key, Hash, SecondHash>::grow() {
     if (cells.empty()) {
         cells.resize(8);
         cellDescription.resize(8, empty);
@@ -131,18 +148,18 @@ void Set<Key, Hash>::grow() {
     }
 }
 
-template<class Key, class Hash>
-bool Set<Key, Hash>::isLoaded() {
+template<class Key, class Hash, class SecondHash>
+bool Set<Key, Hash, SecondHash>::isLoaded() {
     return size * 4 >= cells.capacity() * 3;
 }
 
-template<class Key, class Hash>
-size_t Set<Key, Hash>::doubleHash(const Key &key, size_t idx) {
-    return (hash(key) + idx * (hash(key) * 2 + 1)) % cells.capacity();
+template<class Key, class Hash, class SecondHesh>
+size_t Set<Key, Hash, SecondHesh>::doubleHash(const Key &key, size_t idx) {
+    return (hash(key) + idx * (secondHash(key) * 2 + 1)) % cells.capacity();
 }
 
-template<class Key, class Hash>
-FindResult Set<Key, Hash>::find(const Key &key) {
+template<class Key, class Hash, class SecondHash>
+FindResult Set<Key, Hash, SecondHash>::find(const Key &key) {
     if (cells.empty()) {
         return {false, 0};
     }
