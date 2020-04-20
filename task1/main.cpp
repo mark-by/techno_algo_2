@@ -116,13 +116,14 @@ void Set<Key, Hash>::grow() {
 
     size_t capacity = cells.capacity();
     std::vector<Key> tempCells = cells;
-    std::vector<std::uint8_t> tempDescript = cellDescription;
-    cells.resize(capacity * 2);
+    cells.clear();
+    std::vector<std::uint8_t> tempDescription = cellDescription;
     cellDescription.clear();
+    cells.resize(capacity * 2);
     cellDescription.resize(capacity * 2, empty);
     size = 0;
     size_t idx = 0;
-    for (auto type : tempDescript) {
+    for (auto type : tempDescription) {
         if (type == taken) {
             insert(tempCells[idx]);
         }
