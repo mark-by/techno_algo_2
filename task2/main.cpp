@@ -11,13 +11,6 @@ struct DefaultComparator {
 
 template<class Key, class Comparator = DefaultComparator<Key>>
 class Tree {
-    enum NodeType {
-        leftDone, rootWas, rightDone
-    };
-    enum OrderType {
-        inOrderType, postOrderType, preOrderType
-    };
-
     struct Node {
         Key key;
         Node *left;
@@ -30,46 +23,34 @@ class Tree {
 
 public:
     Tree() : root(nullptr) {};
+
     ~Tree() {
-        _order(passNode, delNode, postOrderType);
+        _postOrder(root, [](Node * node) {
+            delete node;
+        });
     }
 
     void add(Key &key);
 
-    template<class Action>
-    void inOrder(Action action);
-
-    template<class Action>
-    void postOrder(Action action);
-
-    template<class Action>
-    void preOrder(Action action);
+    void print();
 
 private:
     Node *root;
     Comparator comp;
 
-    static Key getKeyNode(Node *node) {
-        return node->key;
-    }
+    template<class Action>
+    void _postOrder(Node *node, Action action);
 
-    static void delNode(Node * node) {
-        delete node;
-    }
-
-    static Node * passNode(Node * node) {
-        return node;
-    }
-
-    template<class NodeAction, class Action>
-    void _order(NodeAction nodeAction, Action action, std::uint8_t orderType);
+    template<class Action>
+    void _inOrder(Node *node, Action action);
 };
 
-void test(Tree<long> &tree);
+void input(Tree<long> &tree);
 
 int main() {
     Tree<long> tree;
-    test(tree);
+    input(tree);
+    tree.print();
     return 0;
 }
 
@@ -100,72 +81,53 @@ void Tree<Key, Comparator>::add(Key &key) {
 }
 
 template<class Key, class Comparator>
-template<class NodeAction, class Action>
-void Tree<Key, Comparator>::_order(NodeAction nodeAction, Action action, std::uint8_t orderType) {
+template<class Action>
+void Tree<Key, Comparator>::_inOrder(Tree::Node *node, Action action) {
     std::stack<Node *> history;
-    std::stack<std::uint8_t> description;
-    history.push(root);
-    description.push(rootWas);
-    while (!history.empty()) {
-        switch (description.top()) {
-            case rootWas:
-                if (orderType == preOrderType) { action(nodeAction(history.top())); }
-                if (history.top()->left) {
-                    history.push(history.top()->left);
-                    description.push(rootWas);
-                } else {
-                    description.top() = leftDone;
-                }
-                break;
-            case leftDone:
-                if (orderType == inOrderType) { action(nodeAction(history.top())); }
-                if (history.top()->right) {
-                    history.push(history.top()->right);
-                    description.push(rootWas);
-                } else {
-                    description.top() = rightDone;
-                }
-                break;
-            case rightDone:
-                if (orderType == postOrderType) { action(nodeAction(history.top())); }
-                history.pop();
-                description.pop();
-                if (description.empty()) {
-                    break;
-                }
-                if (description.top() == rootWas) {
-                    description.top() = leftDone;
-                } else {
-                    description.top() = rightDone;
-                }
-                break;
+    while (!history.empty() || node) {
+        if (node) {
+            history.push(node);
+            node = node->left;
+        } else {
+            node = history.top();
+            history.pop();
+            action(node);
+            node = node->right;
         }
     }
 }
 
 template<class Key, class Comparator>
 template<class Action>
-void Tree<Key, Comparator>::postOrder(Action action) {
-    _order(getKeyNode, action, postOrderType);
+void Tree<Key, Comparator>::_postOrder(Tree::Node * node, Action action) {
+    std::stack<Node *> history;
+    Node * lastNode = nullptr;
+    while (!history.empty() || node) {
+        if (node) {
+            history.push(node);
+            node = node->left;
+        } else {
+            Node * top = history.top();
+            if (top->right && lastNode != top->right) {
+                node = top->right;
+            } else {
+                action(top);
+                lastNode = history.top();
+                history.pop();
+            }
+        }
+    }
 }
 
 template<class Key, class Comparator>
-template<class Action>
-void Tree<Key, Comparator>::inOrder(Action action) {
-    _order(getKeyNode, action, inOrderType);
+void Tree<Key, Comparator>::print()  {
+    _inOrder(root, [](Node * node) {
+        std::cout << node->key << " ";
+    });
+    std::cout << std::endl;
 }
 
-template<class Key, class Comparator>
-template<class Action>
-void Tree<Key, Comparator>::preOrder(Action action) {
-    _order(getKeyNode, action, preOrderType);
-}
-
-void print(long key) {
-    std::cout << key << " ";
-}
-
-void test(Tree<long> &tree) {
+void input(Tree<long> &tree) {
     size_t size;
     std::cin >> size;
     size_t idx = 0;
@@ -175,5 +137,4 @@ void test(Tree<long> &tree) {
         tree.add(number);
         idx++;
     }
-    tree.inOrder(print);
 }
