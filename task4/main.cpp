@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <stack>
 
 template<class T>
 struct DefaultComparator {
@@ -41,10 +40,6 @@ public:
 
     size_t find(const Key &key);
 
-    void print() {
-        _print(root);
-    }
-
     void pop(size_t index);
 
 private:
@@ -67,30 +62,6 @@ private:
 
     Node *_pop(Node *node, size_t index, size_t &counter);
 
-    void _print(Node * node) {
-        if (!node) {
-            return;
-        }
-        _print(node->left);
-        std::cout << node->key << std::endl;
-        _print(node->right);
-    }
-
-    Node * findMin(Node * node) {
-        if (!node->left) {
-            return node;
-        }
-        return findMin(node->left);
-    }
-
-    Node * removeMin(Node * node) {
-        if (!node->left) {
-            return node->right;
-        }
-        node->left = removeMin(node->left);
-        return balance(node);
-    }
-
     Node *rotateRight(Node *node);
 
     Node *rotateLeft(Node *node);
@@ -104,13 +75,6 @@ void test(AVLTree<int> &tree);
 
 int main() {
     AVLTree<int> tree;
-//    for (int i = 0; i < 1000; i++) {
-//        tree.insert(i);
-//        if (i % 2 == 0) {
-//            tree.pop(i/2);
-//        }
-//    }
-//    std::cout << tree.size() << std::endl;
     test(tree);
     return 0;
 }
@@ -282,9 +246,6 @@ typename AVLTree<Key, Comparator>::Node *AVLTree<Key, Comparator>::_pop(AVLTree:
         Node *minNode = nullptr;
         right = popMin(right, minNode);
         minNode->right = right;
-//        Node * minNode = findMin(right);
-//        minNode->right = removeMin(right);
-
         minNode->left = left;
 
         return balance(minNode);
