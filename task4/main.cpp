@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <stack>
 
 template<class T>
 struct DefaultComparator {
@@ -56,7 +57,7 @@ private:
 
     std::size_t weight(Node *node) const;
 
-    Node *popMin(Node *node);
+    Node *popMin(Node *node, Node *& minNode);
 
     std::int8_t balanceFactor(Node *node);
 
@@ -103,8 +104,14 @@ void test(AVLTree<int> &tree);
 
 int main() {
     AVLTree<int> tree;
+//    for (int i = 0; i < 1000; i++) {
+//        tree.insert(i);
+//        if (i % 2 == 0) {
+//            tree.pop(i/2);
+//        }
+//    }
+//    std::cout << tree.size() << std::endl;
     test(tree);
-
     return 0;
 }
 
@@ -138,16 +145,6 @@ void AVLTree<Key, Comparator>::pop(size_t index) {
     root = _pop(root, index, currIndex);
 }
 
-template<class Key, class Comparator>
-typename AVLTree<Key, Comparator>::Node *AVLTree<Key, Comparator>::popMin(AVLTree::Node *node) {
-    Node *curr = node;
-    while (curr->left) {
-        curr = curr->left;
-    }
-    node->left = curr->right;
-    curr->right = balance(node);
-    return balance(curr);
-}
 
 template<class Key, class Comparator>
 std::int8_t AVLTree<Key, Comparator>::balanceFactor(AVLTree<Key, Comparator>::Node *node) {
@@ -282,10 +279,12 @@ typename AVLTree<Key, Comparator>::Node *AVLTree<Key, Comparator>::_pop(AVLTree:
             return left;
         }
 
-//        Node *minNode = popMin(right);
-//        minNode->left = left;
-        Node * minNode = findMin(right);
-        minNode->right = removeMin(right);
+        Node *minNode = nullptr;
+        right = popMin(right, minNode);
+        minNode->right = right;
+//        Node * minNode = findMin(right);
+//        minNode->right = removeMin(right);
+
         minNode->left = left;
 
         return balance(minNode);
@@ -297,6 +296,16 @@ typename AVLTree<Key, Comparator>::Node *AVLTree<Key, Comparator>::_pop(AVLTree:
         node->left = _pop(node->left, index, counter);
     };
 
+    return balance(node);
+}
+
+template<class Key, class Comparator>
+typename AVLTree<Key, Comparator>::Node *AVLTree<Key, Comparator>::popMin(Node *node, Node *& minNode) {
+    if (!node->left) {
+        minNode = node;
+        return node->right;
+    }
+    node->left = popMin(node->left, minNode);
     return balance(node);
 }
 
