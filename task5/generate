@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+import sys
+import random
+import string
+if len(sys.argv) != 3:
+    print("Usage: <filename> <size>")
+    exit(0)
+file = open( sys.argv[1], "w")
+print("Generating file...")
+file_size = int(sys.argv[2])
+for i in range(file_size):
+    progress = (i / file_size) * 100
+    print(f"Progress: {progress:.4}%        \r", end="")
+    file.write(''.join([random.choice(string.ascii_letters+string.digits+string.punctuation) for i in range(1024)]))
+print("\nDone!")
+file.close()

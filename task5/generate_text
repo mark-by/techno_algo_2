@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+import sys
+import faker
+
+if len(sys.argv) != 3:
+    print("Usage: <filename> <size>")
+    exit(0)
+
+faker = faker.Faker()
+file = open( sys.argv[1], "w")
+file.write(faker.text(int(sys.argv[2])))
+print("Done!")
+file.close()

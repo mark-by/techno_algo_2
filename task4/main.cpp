@@ -40,6 +40,21 @@ public:
 
     size_t find(const Key &key);
 
+
+    void print() {
+        _print(root);
+    }
+
+    void _print(Node * node) {
+        if (!node) {
+            return;
+        }
+        std::cout << node->key << std::endl;
+        _print(node->left);
+        _print(node->right);
+    }
+
+
     void pop(size_t index);
 
 private:
@@ -286,4 +301,5 @@ void test(AVLTree<int> &tree) {
                 break;
         }
     }
+    tree.print();
 }
